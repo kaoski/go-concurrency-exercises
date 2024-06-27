@@ -20,6 +20,8 @@ var dataStream chan struct{}
 func run(url string) (string, []string, error) {
 	<-dataStream
 	body, urls, err := fetcher.Fetch(url)
+	time.Sleep(1000 * time.Millisecond)
+	dataStream <- struct{}{}
 	return body, urls, err
 }
 
@@ -52,16 +54,7 @@ func main() {
 	var wg sync.WaitGroup
 	dataStream = make(chan struct{}, 1)
 	defer func() { close(dataStream) }()
-	go func() {
-		ticker := time.NewTicker(1 * time.Second)
-		defer ticker.Stop()
-		for range ticker.C {
-			select {
-			case dataStream <- struct{}{}:
-			default:
-			}
-		}
-	}()
+	dataStream <- struct{}{}
 	wg.Add(1)
 	Crawl("http://golang.org/", 4, &wg)
 	wg.Wait()
