@@ -15,13 +15,13 @@ import (
 	"time"
 )
 
-var lock sync.Mutex
+const rateLimit = time.Second
+
+var throttle <-chan time.Time
 
 func run(url string) (string, []string, error) {
-	defer lock.Unlock()
-	lock.Lock()
+	<-throttle
 	body, urls, err := fetcher.Fetch(url)
-	time.Sleep(1 * time.Second)
 	return body, urls, err
 }
 
@@ -52,7 +52,7 @@ func Crawl(url string, depth int, wg *sync.WaitGroup) {
 
 func main() {
 	var wg sync.WaitGroup
-
+	throttle = time.Tick(rateLimit)
 	wg.Add(1)
 	Crawl("http://golang.org/", 4, &wg)
 	wg.Wait()
