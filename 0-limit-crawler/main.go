@@ -15,13 +15,13 @@ import (
 	"time"
 )
 
-var dataStream chan struct{}
+var lock sync.Mutex
 
 func run(url string) (string, []string, error) {
-	<-dataStream
+	defer lock.Unlock()
+	lock.Lock()
 	body, urls, err := fetcher.Fetch(url)
-	time.Sleep(1000 * time.Millisecond)
-	dataStream <- struct{}{}
+	time.Sleep(1 * time.Second)
 	return body, urls, err
 }
 
@@ -52,9 +52,7 @@ func Crawl(url string, depth int, wg *sync.WaitGroup) {
 
 func main() {
 	var wg sync.WaitGroup
-	dataStream = make(chan struct{}, 1)
-	defer func() { close(dataStream) }()
-	dataStream <- struct{}{}
+
 	wg.Add(1)
 	Crawl("http://golang.org/", 4, &wg)
 	wg.Wait()
