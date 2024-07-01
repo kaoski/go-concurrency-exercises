@@ -19,7 +19,7 @@ const (
 
 // RunMockServer simulates a running server, which accesses the
 // key-value database through our cache
-func RunMockServer(cache *KeyStoreCache, t *testing.T) {
+func RunMockServer(cache *Cache, t *testing.T) {
 	var wg sync.WaitGroup
 
 	for c := 0; c < cycles; c++ {
